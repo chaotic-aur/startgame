@@ -2,6 +2,7 @@
 
 # ** Local
 _GAME_CMD=()
+_RUN_TERMINAL=0
 
 # ** Prepare the GAMEMODERUNEXEC and _GAME_CMD
 function prepare() {
@@ -34,7 +35,7 @@ function prepare() {
   # * CLI parameters
   while true; do
     case "${1:-}" in
-    '-p' | '--amdgpupro')
+    '-p' | '--amdpro')
       _DRIVER='amdpro'
       shift 1
       ;;
@@ -100,19 +101,18 @@ function prepare() {
       _ZINK=1
       shift 1
       ;;
+    '--term')
+      _RUN_TERMINAL=1
+      shift 1
+      ;;
     '--' | *)
       break
       ;;
     esac
   done
 
-  # * The guy that'll handle all those options
+  # * Initial options
   GAMEMODERUNEXEC="env DXVK_HUD=compiler WINEFSYNC=1"
-
-  # * Steam helper
-  if [ -n "${SteamGameId:-}" ]; then
-    GAMEMODERUNEXEC+=" WINEPREFIX=\"$HOME/.local/share/Steam/steamapps/compatdata/$SteamGameId/pfx\""
-  fi
 
   # * Apply features
   if [[ "$_DRIVER" == 'radeon' ]]; then
@@ -140,9 +140,9 @@ function prepare() {
   fi
 
   if [[ "$_NATIVESDL" == '32' ]]; then
-    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API='/usr/lib32/libSDL2-2.0.so.0'"
+    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API=/usr/lib32/libSDL2-2.0.so.0"
   elif [[ "$_NATIVESDL" == '64' ]]; then
-    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API='/usr/lib/libSDL2-2.0.so.0'"
+    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API=/usr/lib/libSDL2-2.0.so.0"
   fi
 
   if [[ "$_NODCC" == '1' ]]; then
@@ -167,21 +167,20 @@ function prepare() {
 
   # * Composable variables
   if [[ -n "${_RADV_DEBUG:-}" ]]; then
-    GAMEMODERUNEXEC+=" RADV_DEBUG=\"$(IFS=',';echo "${_RADV_DEBUG[*]}")\""
+    GAMEMODERUNEXEC+=" RADV_DEBUG=$(IFS=',';echo "${_RADV_DEBUG[*]}")"
   fi
 
   if [[ -n "${_WINEDEBUG:-}" ]]; then
-    GAMEMODERUNEXEC+=" WINEDEBUG=\"$(IFS=',';echo "${_WINEDEBUG[*]}")\""
+    GAMEMODERUNEXEC+=" WINEDEBUG=$(IFS=',';echo "${_WINEDEBUG[*]}")"
   fi
 
   # * Prepend
-
   [[ -n "${WAYLAND_DISPLAY:-}" ]] && [[ "$_NOXWAYLAND" != '1' ]] && \
-    GAMEMODERUNEXEC="nowl $GAMEMODERUNEXEC"
+    GAMEMODERUNEXEC+=" SDL_VIDEODRIVER=x11 XDG_SESSION_TYPE=x11"
   [[ "$_MANGOHUD" == '1' ]] && \
     GAMEMODERUNEXEC="mangohud $GAMEMODERUNEXEC"
   [[ "$_GAMESCOPE" == '1' ]] && \
-    GAMEMODERUNEXEC="gamescope -r 75 -o 30 -w 2560 -h 1080 -W 2560 -H 1080 -- $GAMEMODERUNEXEC"
+    GAMEMODERUNEXEC="gamescope ${GAMESCOPE_PARAMS:-} -- $GAMEMODERUNEXEC"
 
   # * Export
   export GAMEMODERUNEXEC
@@ -190,12 +189,22 @@ function prepare() {
 
 # * Go game!
 prepare "$@"
-_GAME_LOG="/tmp/${USER}-game-$$.log"
-echo "[ Chaotic's Start Game ]"
-echo "- at: $PWD"
-echo "- with: GAMEMODERUNEXEC=${GAMEMODERUNEXEC}"
-echo "- running:" "${_GAME_CMD[@]}"
-echo "- logs: ${_GAME_LOG}"
-exec "${_GAME_CMD[@]}" 2>&1 | tee "$_GAME_LOG"
+
+if [[ "$_RUN_TERMINAL" != '1' ]]; then
+  _GAME_LOG="/tmp/${USER}-game-$$.log"
+  echo "[ Chaotic's Start Game ]"
+  echo "- at: $PWD"
+  echo "- with: GAMEMODERUNEXEC=${GAMEMODERUNEXEC}"
+  echo "- running: ${_GAME_CMD[*]@Q}"
+  echo "- logs: ${_GAME_LOG}"
+  exec "${_GAME_CMD[@]}" 2>&1 | tee "$_GAME_LOG"
+else
+  if [ -n "${SteamGameId:-}" ]; then
+    GAME_CMD="${_GAME_CMD[*]@Q}"
+    WINEPREFIX="$HOME/.local/share/Steam/steamapps/compatdata/$SteamGameId/pfx"
+    export GAME_CMD WINEPREFIX
+    exec "$TERM"
+  fi
+fi
 
 # vim: set ts=2 sw=2 et:
