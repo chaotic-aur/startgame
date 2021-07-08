@@ -116,9 +116,9 @@ function prepare() {
 
   # * Apply features
   if [[ "$_DRIVER" == 'radeon' ]]; then
-    GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=\"${_ICD_PATH}/radeon_icd.i686.json:${_ICD_PATH}/radeon_icd.x86_64.json\""
+    GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=${_ICD_PATH}/radeon_icd.i686.json:${_ICD_PATH}/radeon_icd.x86_64.json"
   elif [[ "$_DRIVER" == 'amdpro' ]]; then
-    GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=\"${_ICD_PATH}/amd_pro_icd32.json:${_ICD_PATH}/amd_pro_icd64.json\""
+    GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=${_ICD_PATH}/amd_pro_icd32.json:${_ICD_PATH}/amd_pro_icd64.json"
   fi
 
   if [[ "$_DXR" == '1' ]]; then
