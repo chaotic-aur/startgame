@@ -200,11 +200,12 @@ if [[ "$_RUN_TERMINAL" != '1' ]]; then
   exec "${_GAME_CMD[@]}" 2>&1 | tee "$_GAME_LOG"
 else
   if [ -n "${SteamGameId:-}" ]; then
-    GAME_CMD="${_GAME_CMD[*]@Q}"
     WINEPREFIX="$HOME/.local/share/Steam/steamapps/compatdata/$SteamGameId/pfx"
-    export GAME_CMD WINEPREFIX
-    exec "$TERM"
+    export WINEPREFIX
   fi
+  GAME_CMD="${_GAME_CMD[*]@Q}"
+  export GAME_CMD
+  exec "$TERM"
 fi
 
 # vim: set ts=2 sw=2 et:
