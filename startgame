@@ -1,0 +1,201 @@
+#!/usr/bin/env bash
+
+# ** Local
+_GAME_CMD=()
+
+# ** Prepare the GAMEMODERUNEXEC and _GAME_CMD
+function prepare() {
+  # * Don't export
+  local _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
+    _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
+    _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK
+  _WINEDEBUG=()
+  _RADV_DEBUG=()
+
+  # * System
+  _ICD_PATH='/usr/share/vulkan/icd.d'
+
+  # * Features
+  _DRIVER=0
+  _DXR=0
+  _GAMESCOPE=0
+  _LLVM=0
+  _LOG=0
+  _LOG_MFPLAT=0
+  _MANGOHUD=1
+  _NATIVESDL=0
+  _NODCC=0
+  _NOX=0
+  _NOXWAYLAND=0
+  _SOLDIER=0
+  _VKCAPTURE=0
+  _ZINK=0
+
+  # * CLI parameters
+  while true; do
+    case "${1:-}" in
+    '-p' | '--amdgpupro')
+      _DRIVER='amdpro'
+      shift 1
+      ;;
+    '--radeon')
+      _DRIVER='radeon'
+      shift 1
+      ;;
+    '--dxr')
+      _DXR=1
+      shift 1
+      ;;
+    '--gamescope')
+      _GAMESCOPE=1
+      shift 1
+      ;;
+    '--llvm')
+      _LLVM=1
+      shift 1
+      ;;
+    '--log')
+      _LOG=1
+      shift 1
+      ;;
+    '--log-mfplat')
+      _LOG=1
+      _LOG_MFPLAT=1
+      shift 1
+      ;;
+    '--nomango')
+      _MANGOHUD=0
+      shift 1
+      ;;
+    '--nsdl=32')
+      _NATIVESDL='32'
+      shift 1
+      ;;
+    '--nsdl' | '--nsdl=64')
+      _NATIVESDL='64'
+      shift 1
+      ;;
+    '--nodcc')
+      _NODCC=1
+      shift 1
+      ;;
+    '--nox')
+      _NOX=1
+      _NOXWAYLAND=1
+      shift 1
+      ;;
+    '--soldier')
+      _SOLDIER=1
+      shift 1
+      ;;
+    '-c' | '--vkcapture')
+      _VKCAPTURE=1
+      shift 1
+      ;;
+    '-w' | '--wayland')
+      _NOXWAYLAND=1
+      shift 1
+      ;;
+    '--zink')
+      _ZINK=1
+      shift 1
+      ;;
+    '--' | *)
+      break
+      ;;
+    esac
+  done
+
+  # * The guy that'll handle all those options
+  GAMEMODERUNEXEC="env DXVK_HUD=compiler WINEFSYNC=1"
+
+  # * Steam helper
+  if [ -n "${SteamGameId:-}" ]; then
+    GAMEMODERUNEXEC+=" WINEPREFIX=\"$HOME/.local/share/Steam/steamapps/compatdata/$SteamGameId/pfx\""
+  fi
+
+  # * Apply features
+  if [[ "$_DRIVER" == 'radeon' ]]; then
+    GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=\"${_ICD_PATH}/radeon_icd.i686.json:${_ICD_PATH}/radeon_icd.x86_64.json\""
+  elif [[ "$_DRIVER" == 'amdpro' ]]; then
+    GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=\"${_ICD_PATH}/amd_pro_icd32.json:${_ICD_PATH}/amd_pro_icd64.json\""
+  fi
+
+  if [[ "$_DXR" == '1' ]]; then
+    GAMEMODERUNEXEC+=" VKD3D_CONFIG=dxr"
+  fi
+
+  if [[ "$_LLVM" == '1' ]]; then
+    _RADV_DEBUG+=('llvm')
+  fi
+
+  if [[ "$_LOG" == '1' ]]; then
+    GAMEMODERUNEXEC+=" PROTON_LOG=1"
+    if [[ "$_LOG_MFPLAT" == '1' ]]; then
+      _WINEDEBUG+=('+mfplat')
+    fi
+  else
+    GAMEMODERUNEXEC+=" DXVK_LOG_PATH=none"
+    GAMEMODERUNEXEC+=" PROTON_WINEDBG_DISABLE=1"
+  fi
+
+  if [[ "$_NATIVESDL" == '32' ]]; then
+    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API='/usr/lib32/libSDL2-2.0.so.0'"
+  elif [[ "$_NATIVESDL" == '64' ]]; then
+    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API='/usr/lib/libSDL2-2.0.so.0'"
+  fi
+
+  if [[ "$_NODCC" == '1' ]]; then
+    _RADV_DEBUG+=('nodcc')
+  fi
+
+
+  if [[ "$_NOX" == '1' ]]; then
+    GAMEMODERUNEXEC+=" --unset=DISPLAY"
+  fi
+
+  if [[ "$_SOLDIER" == '1' ]]; then
+    GAMEMODERUNEXEC+=" STEAM_ENABLE_SOLDIER=1"
+  fi
+
+  if [[ "$_VKCAPTURE" == '1' ]]; then
+    GAMEMODERUNEXEC+=" OBS_VKCAPTURE=1"
+  fi
+  if [[ "$_ZINK" == '1' ]]; then
+    GAMEMODERUNEXEC+=" MESA_LOADER_DRIVER_OVERRIDE=zink"
+  fi
+
+  # * Composable variables
+  if [[ -n "${_RADV_DEBUG:-}" ]]; then
+    GAMEMODERUNEXEC+=" RADV_DEBUG=\"$(IFS=',';echo "${_RADV_DEBUG[*]}")\""
+  fi
+
+  if [[ -n "${_WINEDEBUG:-}" ]]; then
+    GAMEMODERUNEXEC+=" WINEDEBUG=\"$(IFS=',';echo "${_WINEDEBUG[*]}")\""
+  fi
+
+  # * Prepend
+
+  [[ -n "${WAYLAND_DISPLAY:-}" ]] && [[ "$_NOXWAYLAND" != '1' ]] && \
+    GAMEMODERUNEXEC="nowl $GAMEMODERUNEXEC"
+  [[ "$_MANGOHUD" == '1' ]] && \
+    GAMEMODERUNEXEC="mangohud $GAMEMODERUNEXEC"
+  [[ "$_GAMESCOPE" == '1' ]] && \
+    GAMEMODERUNEXEC="gamescope -r 75 -o 30 -w 2560 -h 1080 -W 2560 -H 1080 -- $GAMEMODERUNEXEC"
+
+  # * Export
+  export GAMEMODERUNEXEC
+  _GAME_CMD=(gamemoderun "$@")
+}
+
+# * Go game!
+prepare "$@"
+_GAME_LOG="/tmp/${USER}-game-$$.log"
+echo "[ Chaotic's Start Game ]"
+echo "- at: $PWD"
+echo "- with: GAMEMODERUNEXEC=${GAMEMODERUNEXEC}"
+echo "- running:" "${_GAME_CMD[@]}"
+echo "- logs: ${_GAME_LOG}"
+exec "${_GAME_CMD[@]}" 2>&1 | tee "$_GAME_LOG"
+
+# vim: set ts=2 sw=2 et:
