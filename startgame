@@ -1,5 +1,47 @@
 #!/usr/bin/env bash
 
+# Help
+if [[ $# -eq 0 ]] || [[ "${1:-}" == '--help' ]]; then
+  cat <<EOF
+  Usage: startgame \${options} -- %command%
+
+  Options:
+    --amdpro          Force VK ICD to amdpro (for AMD GPU's only)
+    --radeon          Force VK ICD to radeon (for AMD GPU's only)
+    --dxr             Enable DXR in VKD3D
+    --gamescope       Enable Gamescope
+    --llvm            Disables ACO (for AMD GPU's only)
+    --log             Enable Proton, Wine and DXVK's logs
+    --log-mfplat      Enable Wine's mfplat logs
+    --nomango         Disables MangoHud
+    --nsdl{,=32,=64}  Force system's SDL libraries
+    --nodcc           RADV's nodcc (for AMD GPU's only)
+    --nox             Remove X11 and XWayland access (forces Wayland-only)
+    --singlecore      Simulate singlecore CPU topology
+    --soldier         Sets STEAM_ENABLE_SOLDIER (see notes) 
+    --nocapture       Don't enable VKCapture
+    --wayland         Don't force XWayland
+    --zink            Force Mesa's OpenGL/Gallium to Vulkan
+    --term            Opens a terminal instead of the game (exposes game binary in "\$GAME_CMD")
+    --fsr=[0-5]       Foces AMD's FidelityFX
+
+  Requirements:
+    * gamemode, lib32-gamemode
+    * mangohud, lib32-mangohud
+    * gamescope (optional)
+    * sdl2, lib32-sdl2 (optional)
+    * wine with FSR pattches (optional)
+
+  Notes:
+    * This script by default forces games to use XWayland;
+    * Set \$TERM for '--term';
+    * Gamescope parameters can be configured in "~/.config/gamescope-flags.conf";
+    * For '--soldier' you need this line prepended (after shebang) in "~/.steam/steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point":
+    if [[ -z "\${STEAM_ENABLE_SOLDIER:-}" ]]; then shift 4; exec "\${@}"; fi
+EOF
+  exit 1
+fi
+
 # ** Local
 _GAME_CMD=()
 _RUN_TERMINAL=0
@@ -7,7 +49,7 @@ _RUN_TERMINAL=0
 # ** Prepare the GAMEMODERUNEXEC and _GAME_CMD
 function prepare() {
   # * Don't export
-  local _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
+  local _ARG _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
     _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
     _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE
   _WINEDEBUG=()
@@ -19,6 +61,7 @@ function prepare() {
   # * Features
   _DRIVER=0
   _DXR=0
+  _FSR_STRENGTH=''
   _GAMESCOPE=0
   _LLVM=0
   _LOG=0
@@ -35,7 +78,8 @@ function prepare() {
 
   # * CLI parameters
   while true; do
-    case "${1:-}" in
+    _ARG="${1:-}"
+    case "${_ARG}" in
     '-p' | '--amdpro')
       _DRIVER='amdpro'
       shift 1
@@ -46,6 +90,10 @@ function prepare() {
       ;;
     '--dxr')
       _DXR=1
+      shift 1
+      ;;
+    '--fsr='[0-5])
+      _FSR_STRENGTH="${_ARG:6}"
       shift 1
       ;;
     '--gamescope')
@@ -130,6 +178,10 @@ function prepare() {
     GAMEMODERUNEXEC+=" VKD3D_CONFIG=dxr"
   fi
 
+  if [[ -n "${_FSR_STRENGTH}" ]]; then
+    GAMEMODERUNEXEC+=" WINE_FULLSCREEN_FSR=1 WINE_FULLSCREEN_FSR_STRENGTH=${_FSR_STRENGTH}"
+  fi
+
   if [[ "$_LLVM" == '1' ]]; then
     _RADV_DEBUG+=('llvm')
   fi
@@ -158,6 +210,10 @@ function prepare() {
   if [[ "$_NOX" == '1' ]]; then
     GAMEMODERUNEXEC+=" --unset=DISPLAY"
   fi
+  
+  if [[ "$_SINGLECORE" == '1' ]]; then
+    GAMEMODERUNEXEC+=" WINE_CPU_TOPOLOGY=1:0"
+  fi
 
   if [[ "$_SOLDIER" == '1' ]]; then
     GAMEMODERUNEXEC+=" STEAM_ENABLE_SOLDIER=1"
@@ -168,10 +224,6 @@ function prepare() {
   fi
   if [[ "$_ZINK" == '1' ]]; then
     GAMEMODERUNEXEC+=" MESA_LOADER_DRIVER_OVERRIDE=zink"
-  fi
-  
-  if [[ "$_SINGLECORE" == '1' ]]; then
-    GAMEMODERUNEXEC+=" WINE_CPU_TOPOLOGY=1:0"
   fi
 
   # * Composable variables
@@ -189,7 +241,7 @@ function prepare() {
   [[ "$_MANGOHUD" == '1' ]] && \
     GAMEMODERUNEXEC="mangohud $GAMEMODERUNEXEC"
   [[ "$_GAMESCOPE" == '1' ]] && \
-    GAMEMODERUNEXEC="gamescope ${GAMESCOPE_PARAMS:-} -- $GAMEMODERUNEXEC"
+    GAMEMODERUNEXEC="gamescope $(cat "${XDG_CONFIG_HOME:-$HOME/.config}/gamescope-flags.conf") -- $GAMEMODERUNEXEC"
 
   # * Export
   export GAMEMODERUNEXEC
@@ -214,7 +266,7 @@ else
   fi
   GAME_CMD="${_GAME_CMD[*]@Q}"
   export GAME_CMD
-  exec "$TERM"
+  exec "${TERM:-/bin/term}"
 fi
 
 # vim: set ts=2 sw=2 et:
