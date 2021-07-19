@@ -105,3 +105,9 @@ startgame ${options} -- %command%
 ```sh
 if [[ -z "${STEAM_ENABLE_SOLDIER:-}" ]]; then shift 4; exec "${@}"; fi
 ```
+
+## Examples:
+
+- Portal 2, native in Wayland: `startgame -w --nsdl %command% -novid -vulkan`
+
+- Left 4 Dead 2, native in Wayland: `startgame -w --nsdl=32 %command% -novid -vulkan`
