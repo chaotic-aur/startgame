@@ -9,7 +9,7 @@ function prepare() {
   # * Don't export
   local _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
     _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
-    _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK
+    _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE
   _WINEDEBUG=()
   _RADV_DEBUG=()
 
@@ -28,8 +28,9 @@ function prepare() {
   _NODCC=0
   _NOX=0
   _NOXWAYLAND=0
+  _SINGLECORE=0
   _SOLDIER=0
-  _VKCAPTURE=0
+  _VKCAPTURE=1
   _ZINK=0
 
   # * CLI parameters
@@ -85,12 +86,16 @@ function prepare() {
       _NOXWAYLAND=1
       shift 1
       ;;
+    '--singlecore')
+      _SINGLECORE=1
+      shift 1
+      ;;
     '--soldier')
       _SOLDIER=1
       shift 1
       ;;
-    '-c' | '--vkcapture')
-      _VKCAPTURE=1
+    '--nocapture')
+      _VKCAPTURE=0
       shift 1
       ;;
     '-w' | '--wayland')
@@ -164,6 +169,10 @@ function prepare() {
   if [[ "$_ZINK" == '1' ]]; then
     GAMEMODERUNEXEC+=" MESA_LOADER_DRIVER_OVERRIDE=zink"
   fi
+  
+  if [[ "$_SINGLECORE" == '1' ]]; then
+    GAMEMODERUNEXEC+=" WINE_CPU_TOPOLOGY=1:0"
+  fi
 
   # * Composable variables
   if [[ -n "${_RADV_DEBUG:-}" ]]; then
@@ -191,7 +200,7 @@ function prepare() {
 prepare "$@"
 
 if [[ "$_RUN_TERMINAL" != '1' ]]; then
-  _GAME_LOG="/tmp/${USER}-game-$$.log"
+  _GAME_LOG="/tmp/game-${USER}-$(date +%s).log"
   echo "[ Chaotic's Start Game ]"
   echo "- at: $PWD"
   echo "- with: GAMEMODERUNEXEC=${GAMEMODERUNEXEC}"
