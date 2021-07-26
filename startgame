@@ -6,31 +6,32 @@ if [[ $# -eq 0 ]] || [[ "${1:-}" == '--help' ]]; then
   Usage: startgame \${options} -- %command%
 
   Options:
-    --amdpro          Forces VK ICD to amdpro (for AMD GPU's only)
-    --radeon          Forces VK ICD to radeon (for AMD GPU's only)
     --dxr             Enable DXR in VKD3D
     --fsr=[0-5]       Foces AMD's FidelityFX
     --gamescope       Enable Gamescope
+    --gl=zink         Force Mesa's OpenGL/Gallium to Vulkan
     --llvm            Disables ACO (for AMD GPU's only)
     --log             Enable Proton, Wine and DXVK's logs
     --log-mfplat      Enable Wine's mfplat logs
-    --log-all         Enable Wine's '+all' logs
-    --nomango         Disables MangoHud
-    --nsdl{,=32,=64}  Force system's SDL libraries
+    --log-all         Enable Wine's "+all" logs
+    --nocapture       Don't force VkCapture
     --nodcc           RADV's nodcc (for AMD GPU's only)
+    --nomango         Disables MangoHud
     --nox             Remove X11 and XWayland access (forces Wayland-only)
+    --nsdl{,=32,=64}  Force system's SDL libraries
     --singlecore      Simulate singlecore CPU topology
     --soldier         Enable Steam Soldier (see #notes)
-    --nocapture       Don't force VkCapture
-    --wayland         Don't force XWayland
-    --zink            Force Mesa's OpenGL/Gallium to Vulkan
     --term            Opens a terminal instead of the game (exposes game command in "\$GAME_CMD")
+    --vk=amdpro       Forces VK ICD to amdpro (for AMD GPU's only)
+    --vk=radeon       Forces VK ICD to radeon (for AMD GPU's only)
+    --wayland         Don't force XWayland
 
   Requirements:
     * ArchLinux
     * gamemode, lib32-gamemode
     * mangohud, lib32-mangohud
     * obs-vkcapture
+    * vulkan-amdgpu-pro, lib32-vulkan-amdgpu-pro (optional)
     * gamescope (optional)
     * sdl2, lib32-sdl2 (optional)
     * Wine with FSR pattches (optional)
@@ -91,11 +92,11 @@ function prepare() {
   while true; do
     _ARG="${1:-}"
     case "${_ARG}" in
-    '-p' | '--amdpro')
+    '--vk=amdpro')
       _DRIVER='amdpro'
       shift 1
       ;;
-    '--radeon')
+    '--vk=radeon')
       _DRIVER='radeon'
       shift 1
       ;;
@@ -166,7 +167,7 @@ function prepare() {
       _NOXWAYLAND=1
       shift 1
       ;;
-    '--zink')
+    '--gl=zink')
       _ZINK=1
       shift 1
       ;;

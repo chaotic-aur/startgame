@@ -10,12 +10,6 @@ startgame ${options} -- %command%
 
 ## Options:
 
-- `--amdpro`
-  Forces VK ICD to amdpro (for AMD GPU's only)
-
-- `--radeon`
-  Forces VK ICD to radeon (for AMD GPU's only)
-
 - `--dxr`
   Enable DXR in VKD3D
 
@@ -24,6 +18,9 @@ startgame ${options} -- %command%
 
 - `--gamescope`
   Enable Gamescope
+
+- `--gl=zink`
+  Force Mesa's OpenGL/Gallium to Vulkan
 
 - `--llvm`
   Disables ACO (for AMD GPU's only)
@@ -34,17 +31,23 @@ startgame ${options} -- %command%
 - `--log-mfplat`
   Enable Wine's mfplat logs
 
-- `--nomango`
-  Disables MangoHud
+- `--log-all`
+  Enable Wine's "+all" logs
 
-- `--nsdl{,=32,=64}`
-  Force system's SDL libraries
+- `--nocapture`
+  Don't force VkCapture
 
 - `--nodcc`
   RADV's nodcc (for AMD GPU's only)
 
+- `--nomango`
+  Disables MangoHud
+
 - `--nox`
   Remove X11 and XWayland access (forces Wayland-only)
+
+- `--nsdl{,=32,=64}`
+  Force system's SDL libraries
 
 - `--singlecore`
   Simulate singlecore CPU topology
@@ -52,17 +55,17 @@ startgame ${options} -- %command%
 - `--soldier`
   Enable Steam Soldier (see #notes)
 
-- `--nocapture`
-  Don't force VkCapture
+- `--term`
+  Opens a terminal instead of the game (exposes game command in `"$GAME_CMD"`)
+
+- `--vk=amdpro`
+  Forces VK ICD to amdpro (for AMD GPU's only)
+
+- `--vk=radeon`
+  Forces VK ICD to radeon (for AMD GPU's only)
 
 - `--wayland`
   Don't force XWayland
-
-- `--zink`
-  Force Mesa's OpenGL/Gallium to Vulkan
-
-- `--term`
-  Opens a terminal instead of the game (exposes game command in `"$GAME_CMD"`)
 
 ## Requirements:
 
@@ -73,6 +76,8 @@ startgame ${options} -- %command%
 - `mangohud`, `lib32-mangohud`
 
 - `obs-vkcapture`
+
+- `vulkan-amdgpu-pro`, `lib32-vulkan-amdgpu-pro` (optional)
 
 - `gamescope` (optional)
 
