@@ -14,6 +14,7 @@ if [[ $# -eq 0 ]] || [[ "${1:-}" == '--help' ]]; then
     --llvm            Disables ACO (for AMD GPU's only)
     --log             Enable Proton, Wine and DXVK's logs
     --log-mfplat      Enable Wine's mfplat logs
+    --log-all         Enable Wine's '+all' logs
     --nomango         Disables MangoHud
     --nsdl{,=32,=64}  Force system's SDL libraries
     --nodcc           RADV's nodcc (for AMD GPU's only)
@@ -43,7 +44,7 @@ if [[ $# -eq 0 ]] || [[ "${1:-}" == '--help' ]]; then
     * Logs stdout and stderr to "/tmp/game-user-timestamp.log".
 
   Notes:
-    * Set \$TERM for '--term';
+    * Set \$TERM to use '--term';
     * Gamescope parameters can be configured in "~/.config/gamescope-flags.conf";
     * For enabling/skipping Steam Solider with '--soldier', you'll need this line prepended (after shebang) in "~/.steam/steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point":
     if [[ -z "\${STEAM_ENABLE_SOLDIER:-}" ]]; then shift 4; exec "\${@}"; fi
@@ -75,6 +76,7 @@ function prepare() {
   _LLVM=0
   _LOG=0
   _LOG_MFPLAT=0
+  _LOG_ALL=0
   _MANGOHUD=1
   _NATIVESDL=0
   _NODCC=0
@@ -120,6 +122,11 @@ function prepare() {
     '--log-mfplat')
       _LOG=1
       _LOG_MFPLAT=1
+      shift 1
+      ;;
+    '--log-all')
+      _LOG=1
+      _LOG_ALL=1
       shift 1
       ;;
     '--nomango')
@@ -197,7 +204,9 @@ function prepare() {
 
   if [[ "$_LOG" == '1' ]]; then
     GAMEMODERUNEXEC+=" PROTON_LOG=1"
-    if [[ "$_LOG_MFPLAT" == '1' ]]; then
+    if [[ "$_LOG_ALL" == '1' ]]; then
+      _WINEDEBUG+=('+all')
+    elif [[ "$_LOG_MFPLAT" == '1' ]]; then
       _WINEDEBUG+=('+mfplat')
     fi
   else
