@@ -62,9 +62,10 @@ function prepare() {
   # * Don't export
   local _ARG _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
     _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
-    _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE
+    _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE _VKD3D_CONFIG
   _WINEDEBUG=()
   _RADV_DEBUG=()
+  _VKD3D_CONFIG=()
 
   # * System
   _ICD_PATH='/usr/share/vulkan/icd.d'
@@ -192,7 +193,7 @@ function prepare() {
   fi
 
   if [[ "$_DXR" == '1' ]]; then
-    GAMEMODERUNEXEC+=" VKD3D_CONFIG=dxr"
+    _VKD3D_CONFIG+=('dxr')
   fi
 
   if [[ -n "${_FSR_STRENGTH}" ]]; then
@@ -225,7 +226,6 @@ function prepare() {
     _RADV_DEBUG+=('nodcc')
   fi
 
-
   if [[ "$_NOX" == '1' ]]; then
     GAMEMODERUNEXEC+=" --unset=DISPLAY"
   fi
@@ -241,6 +241,7 @@ function prepare() {
   if [[ "$_VKCAPTURE" == '1' ]]; then
     GAMEMODERUNEXEC+=" OBS_VKCAPTURE=1"
   fi
+
   if [[ "$_ZINK" == '1' ]]; then
     GAMEMODERUNEXEC+=" MESA_LOADER_DRIVER_OVERRIDE=zink"
   fi
@@ -252,6 +253,10 @@ function prepare() {
 
   if [[ -n "${_WINEDEBUG:-}" ]]; then
     GAMEMODERUNEXEC+=" WINEDEBUG=$(IFS=',';echo "${_WINEDEBUG[*]}")"
+  fi
+  
+  if [[ -n "${_VKD3D_CONFIG:-}" ]]; then
+    GAMEMODERUNEXEC+=" VKD3D_CONFIG=$(IFS=',';echo "${_VKD3D_CONFIG[*]}")"
   fi
 
   # * Prepend
