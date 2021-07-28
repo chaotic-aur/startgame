@@ -45,7 +45,7 @@ if [[ $# -eq 0 ]] || [[ "${1:-}" == '--help' ]]; then
     * Logs stdout and stderr to "/tmp/game-user-timestamp.log".
 
   Notes:
-    * Set \$TERM to use '--term';
+    * Set \$GUITERM to use '--term';
     * Gamescope parameters can be configured in "~/.config/gamescope-flags.conf";
     * For enabling/skipping Steam Solider with '--soldier', you'll need this line prepended (after shebang) in "~/.steam/steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point":
     if [[ -z "\${STEAM_ENABLE_SOLDIER:-}" ]]; then shift 4; exec "\${@}"; fi
@@ -290,7 +290,7 @@ else
   fi
   GAME_CMD="${_GAME_CMD[*]@Q}"
   export GAME_CMD
-  exec "${TERM:-/bin/term}"
+  exec "${GUITERM:-alacritty}"
 fi
 
 # vim: set ts=2 sw=2 et:

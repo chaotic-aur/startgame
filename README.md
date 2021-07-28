@@ -101,7 +101,7 @@ startgame ${options} -- %command%
 
 ## Notes:
 
-- Set `$TERM` to use `--term`;
+- Set `$GUITERM` to use `--term`;
 
 - Gamescope parameters can be configured in `"~/.config/gamescope-flags.conf"`;
 
