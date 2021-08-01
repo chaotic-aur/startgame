@@ -57,6 +57,15 @@ fi
 _GAME_CMD=()
 _RUN_TERMINAL=0
 
+# ** Config
+if [[ -z "$XDG_CONFIG_HOME" ]]; then
+	if [[ -z "$HOME" ]]; then
+		XDG_CONFIG_HOME='/tmp'
+	else
+		XDG_CONFIG_HOME="$HOME/.config"
+	fi
+fi
+
 # ** Prepare the GAMEMODERUNEXEC and _GAME_CMD
 function prepare() {
   # * Don't export
@@ -182,6 +191,16 @@ function prepare() {
     esac
   done
 
+  # * User settings
+  if [[ -f "/etc/gamerc" ]]; then
+    # shellcheck source=/dev/null
+    source "/etc/gamerc" || true
+  fi
+  if [[ -f "${XDG_CONFIG_HOME}/gamerc" ]]; then
+    # shellcheck source=gamerc.example
+    source "${XDG_CONFIG_HOME}/gamerc" || true
+  fi
+
   # * Initial options
   GAMEMODERUNEXEC="env DXVK_HUD=compiler WINEFSYNC=1"
 
@@ -264,8 +283,14 @@ function prepare() {
     GAMEMODERUNEXEC+=" SDL_VIDEODRIVER=x11 XDG_SESSION_TYPE=x11"
   [[ "$_MANGOHUD" == '1' ]] && \
     GAMEMODERUNEXEC="mangohud $GAMEMODERUNEXEC"
-  [[ "$_GAMESCOPE" == '1' ]] && \
-    GAMEMODERUNEXEC="gamescope $(cat "${XDG_CONFIG_HOME:-$HOME/.config}/gamescope-flags.conf") -- $GAMEMODERUNEXEC"
+  
+  if [[ "$_GAMESCOPE" == '1' ]]; then
+    if [[ -f "${XDG_CONFIG_HOME}/gamescope-flags.conf" ]]; then
+      GAMEMODERUNEXEC="gamescope $(cat "${XDG_CONFIG_HOME}/gamescope-flags.conf") -- $GAMEMODERUNEXEC"
+    else
+      GAMEMODERUNEXEC="gamescope -- $GAMEMODERUNEXEC"
+    fi
+  fi
 
   # * Export
   export GAMEMODERUNEXEC

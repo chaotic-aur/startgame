@@ -111,6 +111,8 @@ startgame ${options} -- %command%
 if [[ -z "${STEAM_ENABLE_SOLDIER:-}" ]]; then shift 4; exec "${@}"; fi
 ```
 
+- For changing default values, copy `"gamerc.example"` to ``"~/.config/gamerc"`.
+
 ## Examples:
 
 - Portal 2, native in Wayland: `startgame -w --nsdl %command% -novid -vulkan`
