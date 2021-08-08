@@ -1,5 +1,5 @@
 pkgname=startgame
-pkgver=1.0.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="CLI/Steam custom game launching helper"
 arch=('any')
@@ -7,7 +7,7 @@ url='https://github.com/chaotic-aur/startgame'
 license=('Unlicense')
 depends=('gamemode' 'lib32-gamemode' 'mangohud' 'lib32-mangohud' 'obs-vkcapture')
 makedepends=('git')
-optdepends=('vulkan-amdgpu-pro' 'lib32-amdgpu-pro' 'gamescope' 'sdl2' 'lib32-sdl2' 'wine-tkg-staging-fsync-git' 'lib32-obs-vkcapture')
+optdepends=('vulkan-amdgpu-pro' 'lib32-amdgpu-pro' 'gamescope' 'sdl2' 'lib32-sdl2' 'wine-tkg-staging-fsync-git' 'lib32-obs-vkcapture' 'amdvlk' 'lib32-amdvlk')
 backup=('etc/gamerc')
 source=('startgame' 'gamerc.example')
 md5sums=('SKIP' 'SKIP')
