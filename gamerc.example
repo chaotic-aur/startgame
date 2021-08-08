@@ -8,6 +8,7 @@
 # Accepted values are:
 #   0       Don't force any driver.
 #  'amdpro' Force "vulkan-amdgpu-pro".
+#  'amdvlk' Force "amdvlk".
 #  'radeon' Force Mesa's RADV.
 #
 #_DRIVER=
