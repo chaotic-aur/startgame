@@ -221,6 +221,8 @@ function prepare() {
 
   if [[ "$_DXR" == '1' ]]; then
     _VKD3D_CONFIG+=('dxr')
+    GAMEMODERUNEXEC+=' RADV_PERFTEST=rt'
+    _RADV_DEBUG+=('nocache')
   fi
 
   if [[ -n "${_FSR_STRENGTH}" ]]; then
