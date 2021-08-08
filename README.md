@@ -61,6 +61,9 @@ startgame ${options} -- %command%
 - `--vk=amdpro`
   Forces VK ICD to amdpro (for AMD GPU's only)
 
+- `--vk=amdvlk`
+  Forces VK ICD to amdvlk (for AMD GPU's only)
+
 - `--vk=radeon`
   Forces VK ICD to radeon (for AMD GPU's only)
 
@@ -78,6 +81,8 @@ startgame ${options} -- %command%
 - `obs-vkcapture`
 
 - `vulkan-amdgpu-pro`, `lib32-vulkan-amdgpu-pro` (optional)
+
+- `amdvlk`, `lib32-amdvlk` (optional)
 
 - `gamescope` (optional)
 
