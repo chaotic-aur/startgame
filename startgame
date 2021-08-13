@@ -5,7 +5,10 @@ if [[ $# -eq 0 ]] || [[ "${1:-}" == '--help' ]]; then
   cat <<EOF
   Usage: startgame \${options} -- %command%
 
-  Options:
+  Options
+    --ao=alsa         Forces SDL_AUDIODRIVER to use ALSA
+    --ao=pulse        Forces SDL_AUDIODRIVER to use PulseAudio
+    --ao=pw           Forces SDL_AUDIODRIVER to use PipeWire
     --dxr             Enable DXR in VKD3D
     --fsr=[0-5]       Foces AMD's FidelityFX
     --gamescope       Enable Gamescope
@@ -72,7 +75,7 @@ fi
 function prepare() {
   # * Don't export
   local _ARG _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
-    _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
+    _AO _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
     _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE _VKD3D_CONFIG
   _WINEDEBUG=()
   _RADV_DEBUG=()
@@ -82,6 +85,7 @@ function prepare() {
   _ICD_PATH='/usr/share/vulkan/icd.d'
 
   # * Features
+  _AO=0
   _DRIVER=0
   _DXR=0
   _FSR_STRENGTH=''
@@ -104,6 +108,18 @@ function prepare() {
   while true; do
     _ARG="${1:-}"
     case "${_ARG}" in
+    '--ao=pw')
+      _AO='pipewire'
+      shift 1
+      ;;
+    '--ao=pulse')
+      _AO='pulseaudio'
+      shift 1
+      ;;
+    '--ao=alsa')
+      _AO='alsa'
+      shift 1
+      ;;
     '--vk=amdpro')
       _DRIVER='amdpro'
       shift 1
@@ -211,6 +227,14 @@ function prepare() {
   GAMEMODERUNEXEC="env DXVK_HUD=compiler WINEFSYNC=1"
 
   # * Apply features
+  if [[ "$_AO" == 'pipewire' ]]; then
+    GAMEMODERUNEXEC+=" SDL_AUDIODRIVER=pipewire"
+  elif [[ "$_AO" == 'pulseaudio' ]]; then
+    GAMEMODERUNEXEC+=" SDL_AUDIODRIVER=pulseaudio"
+  elif [[ "$_AO" == 'alsa' ]]; then
+    GAMEMODERUNEXEC+=" SDL_AUDIODRIVER=alsa"
+  fi
+
   if [[ "$_DRIVER" == 'radeon' ]]; then
     GAMEMODERUNEXEC+=" VK_ICD_FILENAMES=${_ICD_PATH}/radeon_icd.i686.json:${_ICD_PATH}/radeon_icd.x86_64.json"
   elif [[ "$_DRIVER" == 'amdvlk' ]]; then

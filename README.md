@@ -5,10 +5,19 @@ CLI/Steam custom game launching helper
 ## Usage:
 
 ```sh
-startgame ${options} -- %command%
+startgame ${options[@]} -- %command%
 ```
 
 ## Options:
+
+- `--ao=alsa`
+  Forces SDL_AUDIODRIVER to use ALSA
+
+- `--ao=pulse`
+  Forces SDL_AUDIODRIVER to use PulseAudio
+
+- `--ao=pw`
+  Forces SDL_AUDIODRIVER to use PipeWire
 
 - `--dxr`
   Enable DXR in VKD3D
@@ -123,3 +132,5 @@ if [[ -z "${STEAM_ENABLE_SOLDIER:-}" ]]; then shift 4; exec "${@}"; fi
 - Portal 2, native in Wayland: `startgame -w --nsdl %command% -novid -vulkan`
 
 - Left 4 Dead 2, native in Wayland: `startgame -w --nsdl=32 %command% -novid -vulkan`
+
+- Terraria, native in Wayland, and using PipeWire: `startgame --ao=pw -w --nsdl %command%`

@@ -3,6 +3,16 @@
 # After editing, save it in "$XDG_CONFIG_HOME/gamerc", "$HOME/.config", or "/etc/gamerc".
 
 
+# For forcing which audio driver to use.
+# Default: 0
+# Accepted values are:
+#   0           Don't force any driver.
+#  'alsa'       Force ALSA
+#  'pipewire'   Force PipeWire.
+#  'pulseaudio' Force PulseAudio.
+#
+#_AO=
+
 # For forcing which vulkan driver to use.
 # Default: 0
 # Accepted values are:
@@ -24,7 +34,7 @@
 # For forcing AMD FidelityFX through Wine and Dadschoorse.
 # Default: ''
 # Accepted values are:
-#   ''  Don't force FidelityFX.
+#   ''      Don't force FidelityFX.
 #   0-5 (0) Max sharpening [...] (5) Default sharpening.
 #
 #_FSR_STRENGTH=
@@ -140,7 +150,7 @@
 # For rendering OpenGL/Gallium3D through Vulkan.
 # Default: 0
 # Accepted values are:
-#   0 Don't force it.so
+#   0 Don't force it.
 #   1 Enble OpenGL/Gallium3D through Vulkan.
 #
 #_ZINK=
