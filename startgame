@@ -74,12 +74,13 @@ fi
 # ** Prepare the GAMEMODERUNEXEC and _GAME_CMD
 function prepare() {
   # * Don't export
-  local _ARG _ICD_PATH _RADV_DEBUG _WINEDEBUG _DRIVER \
+  local _ARG _ICD_PATH _RADV_DEBUG _WINEDEBUG _DXVK_HUD _DRIVER \
     _AO _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
     _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE _VKD3D_CONFIG
   _WINEDEBUG=()
   _RADV_DEBUG=()
   _VKD3D_CONFIG=()
+  _DXVK_HUD=()
 
   # * System
   _ICD_PATH='/usr/share/vulkan/icd.d'
@@ -88,7 +89,9 @@ function prepare() {
   _AO=0
   _DRIVER=0
   _DXR=0
+  _DXVK_HUD+=('compiler')
   _FSR_STRENGTH=''
+  _FESYNC=1
   _GAMESCOPE=0
   _LLVM=0
   _LOG=0
@@ -214,9 +217,9 @@ function prepare() {
   done
 
   # * User settings
-  if [[ -f "/etc/gamerc" ]]; then
+  if [[ -f '/etc/gamerc' ]]; then
     # shellcheck source=/dev/null
-    source "/etc/gamerc" || true
+    source '/etc/gamerc' || true
   fi
   if [[ -f "${XDG_CONFIG_HOME}/gamerc" ]]; then
     # shellcheck source=gamerc.example
@@ -224,15 +227,15 @@ function prepare() {
   fi
 
   # * Initial options
-  GAMEMODERUNEXEC="env DXVK_HUD=compiler WINEFSYNC=1"
+  GAMEMODERUNEXEC='env'
 
   # * Apply features
   if [[ "$_AO" == 'pipewire' ]]; then
-    GAMEMODERUNEXEC+=" SDL_AUDIODRIVER=pipewire"
+    GAMEMODERUNEXEC+=' SDL_AUDIODRIVER=pipewire'
   elif [[ "$_AO" == 'pulseaudio' ]]; then
-    GAMEMODERUNEXEC+=" SDL_AUDIODRIVER=pulseaudio"
+    GAMEMODERUNEXEC+=' SDL_AUDIODRIVER=pulseaudio'
   elif [[ "$_AO" == 'alsa' ]]; then
-    GAMEMODERUNEXEC+=" SDL_AUDIODRIVER=alsa"
+    GAMEMODERUNEXEC+=' SDL_AUDIODRIVER=alsa'
   fi
 
   if [[ "$_DRIVER" == 'radeon' ]]; then
@@ -258,21 +261,21 @@ function prepare() {
   fi
 
   if [[ "$_LOG" == '1' ]]; then
-    GAMEMODERUNEXEC+=" PROTON_LOG=1"
+    GAMEMODERUNEXEC+=' PROTON_LOG=1'
     if [[ "$_LOG_ALL" == '1' ]]; then
       _WINEDEBUG+=('+all')
     elif [[ "$_LOG_MFPLAT" == '1' ]]; then
       _WINEDEBUG+=('+mfplat')
     fi
   else
-    GAMEMODERUNEXEC+=" DXVK_LOG_PATH=none"
-    GAMEMODERUNEXEC+=" PROTON_WINEDBG_DISABLE=1"
+    GAMEMODERUNEXEC+=' DXVK_LOG_PATH=none'
+    GAMEMODERUNEXEC+=' PROTON_WINEDBG_DISABLE=1'
   fi
 
   if [[ "$_NATIVESDL" == '32' ]]; then
-    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API=/usr/lib32/libSDL2-2.0.so.0"
+    GAMEMODERUNEXEC+=' SDL_DYNAMIC_API=/usr/lib32/libSDL2-2.0.so.0'
   elif [[ "$_NATIVESDL" == '64' ]]; then
-    GAMEMODERUNEXEC+=" SDL_DYNAMIC_API=/usr/lib/libSDL2-2.0.so.0"
+    GAMEMODERUNEXEC+=' SDL_DYNAMIC_API=/usr/lib/libSDL2-2.0.so.0'
   fi
 
   if [[ "$_NODCC" == '1' ]]; then
@@ -280,26 +283,42 @@ function prepare() {
   fi
 
   if [[ "$_NOX" == '1' ]]; then
-    GAMEMODERUNEXEC+=" --unset=DISPLAY"
+    GAMEMODERUNEXEC+=' --unset=DISPLAY'
   fi
   
   if [[ "$_SINGLECORE" == '1' ]]; then
-    GAMEMODERUNEXEC+=" WINE_CPU_TOPOLOGY=1:0"
+    GAMEMODERUNEXEC+=' WINE_CPU_TOPOLOGY=1:0'
   fi
 
   if [[ "$_SOLDIER" == '1' ]]; then
-    GAMEMODERUNEXEC+=" STEAM_ENABLE_SOLDIER=1"
+    GAMEMODERUNEXEC+=' STEAM_ENABLE_SOLDIER=1'
   fi
 
   if [[ "$_VKCAPTURE" == '1' ]]; then
-    GAMEMODERUNEXEC+=" OBS_VKCAPTURE=1"
+    GAMEMODERUNEXEC+=' OBS_VKCAPTURE=1'
   fi
 
   if [[ "$_ZINK" == '1' ]]; then
-    GAMEMODERUNEXEC+=" MESA_LOADER_DRIVER_OVERRIDE=zink"
+    GAMEMODERUNEXEC+=' MESA_LOADER_DRIVER_OVERRIDE=zink'
+  fi
+
+  if [[ "$_FESYNC" == '1' ]]; then
+    GAMEMODERUNEXEC+=' WINEESYNC=1 WINEFSYNC=1'
+  elif [[ "$_FESYNC" == '0' ]]; then
+    GAMEMODERUNEXEC+=' PROTON_NO_FSYNC=1 PROTON_NO_ESYNC=1'
+  elif [[ "$_FESYNC" == 'E' ]] || [[ "$_FESYNC" == 'e' ]]; then
+    GAMEMODERUNEXEC+=' PROTON_NO_FSYNC=1 WINEESYNC=1'
+  elif [[ "$_FESYNC" == 'F' ]] || [[ "$_FESYNC" == 'f' ]]; then
+    GAMEMODERUNEXEC+=' PROTON_NO_ESYNC=1 WINEFSYNC=1'
   fi
 
   # * Composable variables
+  if [[ "${_DXVK_HUD:-}" == '1' ]] || [[ "${_DXVK_HUD:-}" == 'full' ]]; then
+    GAMEMODERUNEXEC+=" DXVK_HUD=${_DXVK_HUD:-}"
+  elif [[ -n "${_DXVK_HUD:-}" ]]; then
+    GAMEMODERUNEXEC+=" DXVK_HUD=$(IFS=',';echo "${_DXVK_HUD[*]}")"
+  fi
+
   if [[ -n "${_RADV_DEBUG:-}" ]]; then
     GAMEMODERUNEXEC+=" RADV_DEBUG=$(IFS=',';echo "${_RADV_DEBUG[*]}")"
   fi
@@ -314,7 +333,7 @@ function prepare() {
 
   # * Prepend
   [[ -n "${WAYLAND_DISPLAY:-}" ]] && [[ "$_NOXWAYLAND" != '1' ]] && \
-    GAMEMODERUNEXEC+=" SDL_VIDEODRIVER=x11 XDG_SESSION_TYPE=x11"
+    GAMEMODERUNEXEC+=' SDL_VIDEODRIVER=x11 XDG_SESSION_TYPE=x11'
   [[ "$_MANGOHUD" == '1' ]] && \
     GAMEMODERUNEXEC="mangohud $GAMEMODERUNEXEC"
   
@@ -336,12 +355,14 @@ prepare "$@"
 
 if [[ "$_RUN_TERMINAL" != '1' ]]; then
   _GAME_LOG="/tmp/game-${USER}-$(date +%s).log"
-  echo "[ Chaotic's Start Game ]"
-  echo "- at: $PWD"
-  echo "- with: GAMEMODERUNEXEC=${GAMEMODERUNEXEC}"
-  echo "- running: ${_GAME_CMD[*]@Q}"
-  echo "- logs: ${_GAME_LOG}"
-  exec "${_GAME_CMD[@]}" 2>&1 | tee "$_GAME_LOG"
+  {
+    echo "[ Chaotic's Start Game ]"
+    echo "- at: $PWD"
+    echo "- with: GAMEMODERUNEXEC=${GAMEMODERUNEXEC}"
+    echo "- running: ${_GAME_CMD[*]@Q}"
+    echo "- logs: ${_GAME_LOG}"
+    exec "${_GAME_CMD[@]}" 2>&1
+  } | tee "$_GAME_LOG"
 else
   if [ -n "${SteamGameId:-}" ]; then
     WINEPREFIX="$HOME/.local/share/Steam/steamapps/compatdata/$SteamGameId/pfx"
