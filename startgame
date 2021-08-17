@@ -77,10 +77,6 @@ function prepare() {
   local _ARG _ICD_PATH _RADV_DEBUG _WINEDEBUG _DXVK_HUD _DRIVER \
     _AO _DXR _GAMESCOPE _LLVM _LOG _LOG_MFPLAT _MANGOHUD _NATIVESDL \
     _NODCC _NOX _NOXWAYLAND _SOLDIER _VKCAPTURE _ZINK _SINGLECORE _VKD3D_CONFIG
-  _WINEDEBUG=()
-  _RADV_DEBUG=()
-  _VKD3D_CONFIG=()
-  _DXVK_HUD=()
 
   # * System
   _ICD_PATH='/usr/share/vulkan/icd.d'
@@ -89,7 +85,7 @@ function prepare() {
   _AO=0
   _DRIVER=0
   _DXR=0
-  _DXVK_HUD+=('compiler')
+  _DXVK_HUD=('compiler')
   _FSR_STRENGTH=''
   _FESYNC=1
   _GAMESCOPE=0
@@ -102,10 +98,23 @@ function prepare() {
   _NODCC=0
   _NOX=0
   _NOXWAYLAND=0
+  _RADV_DEBUG=('nggc')
   _SINGLECORE=0
   _SOLDIER=0
   _VKCAPTURE=1
+  _VKD3D_CONFIG=()
   _ZINK=0
+  _WINEDEBUG=()
+
+  # * User settings
+  if [[ -f '/etc/gamerc' ]]; then
+    # shellcheck source=/dev/null
+    source '/etc/gamerc' || true
+  fi
+  if [[ -f "${XDG_CONFIG_HOME}/gamerc" ]]; then
+    # shellcheck source=gamerc.example
+    source "${XDG_CONFIG_HOME}/gamerc" || true
+  fi
 
   # * CLI parameters
   while true; do
@@ -215,16 +224,6 @@ function prepare() {
       ;;
     esac
   done
-
-  # * User settings
-  if [[ -f '/etc/gamerc' ]]; then
-    # shellcheck source=/dev/null
-    source '/etc/gamerc' || true
-  fi
-  if [[ -f "${XDG_CONFIG_HOME}/gamerc" ]]; then
-    # shellcheck source=gamerc.example
-    source "${XDG_CONFIG_HOME}/gamerc" || true
-  fi
 
   # * Initial options
   GAMEMODERUNEXEC='env'

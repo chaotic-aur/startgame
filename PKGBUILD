@@ -1,5 +1,5 @@
 pkgname=startgame
-pkgver=1.2.1
+pkgver=1.2.2
 pkgrel=1
 pkgdesc="CLI/Steam custom game launching helper"
 arch=('any')
