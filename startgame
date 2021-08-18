@@ -140,7 +140,7 @@ function prepare() {
       _DRIVER='amdvlk'
       shift 1
       ;;
-    '--vk=radeon')
+    '--vk=radeon' | '--vk=radv')
       _DRIVER='radeon'
       shift 1
       ;;
