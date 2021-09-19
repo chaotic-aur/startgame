@@ -219,7 +219,11 @@ function prepare() {
       _RUN_TERMINAL=1
       shift 1
       ;;
-    '--' | *)
+    '--')
+      shift 1
+      break
+      ;;
+    *)
       break
       ;;
     esac
